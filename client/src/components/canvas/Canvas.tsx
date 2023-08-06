@@ -1,22 +1,28 @@
 import React, { FC, useEffect } from "react";
 import { useCanvas } from "../../providers/CanvasProvider";
+import styles from "./Canvas.module.scss";
+import { observer } from "mobx-react-lite";
+import { CanvasStore } from "../../store/CanvasStore";
 
-interface CanvasProps {}
+interface CanvasProps {
+  canvasStore: CanvasStore;
+}
 
-export const Canvas: FC<CanvasProps> = ({}) => {
-  // todo ask about using context values correctly? If the default value of the context is null how can I destructure its values?
-  const canvasContext = useCanvas();
+export const Canvas: FC<CanvasProps> = observer(({ canvasStore }) => {
+  const { canvasRef, prepareCanvas, startDrawing, draw, finishDrawing } =
+    useCanvas();
 
   useEffect(() => {
-    canvasContext?.prepareCanvas();
+    prepareCanvas();
   }, []);
 
   return (
     <canvas
-      ref={canvasContext?.canvasRef}
-      onMouseDown={canvasContext?.startDrawing}
-      onMouseMove={canvasContext?.draw}
-      onMouseUp={canvasContext?.finishDrawing}
+      className={styles.root}
+      ref={canvasRef}
+      onMouseDown={startDrawing}
+      onMouseMove={draw}
+      onMouseUp={finishDrawing}
     />
   );
-};
+});

@@ -7,6 +7,10 @@ import React, {
   useState,
 } from "react";
 import { noop } from "../utils/noop";
+import {
+  INITIAL_LINE_WIDTH,
+  INITIAL_STROKE_COLOR,
+} from "../components/canvas/constants";
 
 interface CanvasProviderProps {
   children: ReactNode;
@@ -62,8 +66,8 @@ export const CanvasProvider = (props: CanvasProviderProps) => {
 
     context.scale(2, 2);
     context.lineCap = "round";
-    context.strokeStyle = "black";
-    context.lineWidth = 5;
+    context.strokeStyle = INITIAL_STROKE_COLOR;
+    context.lineWidth = INITIAL_LINE_WIDTH;
 
     contextRef.current = context;
   };
