@@ -7,10 +7,7 @@ import React, {
   useState,
 } from "react";
 import { noop } from "../utils/noop";
-import {
-  INITIAL_LINE_WIDTH,
-  INITIAL_STROKE_COLOR,
-} from "../components/canvas/constants";
+import { INITIAL_LINE_WIDTH, INITIAL_STROKE_COLOR } from "../store/constants";
 
 interface CanvasProviderProps {
   children: ReactNode;
@@ -42,8 +39,9 @@ const CanvasContext = createContext<ICanvasProvider>({
   clearCanvas: () => {},
 });
 
+// deprecated
 export const CanvasProvider = (props: CanvasProviderProps) => {
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false); // when changes all children rerender
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);

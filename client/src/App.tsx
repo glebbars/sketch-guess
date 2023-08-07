@@ -1,15 +1,15 @@
 import React from "react";
 import { Canvas } from "./components/canvas/Canvas";
-import { CanvasProvider } from "./providers/CanvasProvider";
 import "./App.module.scss";
-import { ColorInput } from "./components/color-input/ColorInput";
+import { CanvasStoreProvider } from "./providers/CanvasStoreProvider";
+import { CanvasActions } from "./components/canvas-actions/CanvasActions";
 
 function App() {
   return (
-    <CanvasProvider>
+    <CanvasStoreProvider>
       <Canvas />
-      <ColorInput />
-    </CanvasProvider>
+      <CanvasActions />
+    </CanvasStoreProvider>
   );
 }
 

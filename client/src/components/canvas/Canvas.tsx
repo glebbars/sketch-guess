@@ -1,20 +1,14 @@
-import React, { FC, useEffect } from "react";
-import { useCanvas } from "../../providers/CanvasProvider";
+import React, { FC } from "react";
 import styles from "./Canvas.module.scss";
-import { observer } from "mobx-react-lite";
-import { CanvasStore } from "../../store/CanvasStore";
+import { useCanvasStore } from "../../providers/CanvasStoreProvider";
 
-interface CanvasProps {
-  canvasStore: CanvasStore;
-}
+interface CanvasProps {}
 
-export const Canvas: FC<CanvasProps> = observer(({ canvasStore }) => {
-  const { canvasRef, prepareCanvas, startDrawing, draw, finishDrawing } =
-    useCanvas();
-
-  useEffect(() => {
-    prepareCanvas();
-  }, []);
+export const Canvas: FC<CanvasProps> = () => {
+  const {
+    canvasRef,
+    canvasStore: { startDrawing, draw, finishDrawing },
+  } = useCanvasStore();
 
   return (
     <canvas
@@ -25,4 +19,4 @@ export const Canvas: FC<CanvasProps> = observer(({ canvasStore }) => {
       onMouseUp={finishDrawing}
     />
   );
-});
+};
