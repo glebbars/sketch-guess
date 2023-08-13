@@ -1,22 +1,20 @@
-import React, { FC } from "react";
+import { FC } from "react";
 import styles from "./Canvas.module.scss";
-import { useCanvasStore } from "../../providers/CanvasStoreProvider";
+import { useCanvas } from "../../providers/CanvasProvider";
 
 interface CanvasProps {}
 
 export const Canvas: FC<CanvasProps> = () => {
-  const {
-    canvasRef,
-    canvasStore: { startDrawing, draw, finishDrawing },
-  } = useCanvasStore();
+  const { canvasRef, onCanvasMouseUp, onCanvasMouseMove, onCanvasMouseDown } =
+    useCanvas();
 
   return (
     <canvas
       className={styles.root}
       ref={canvasRef}
-      onMouseDown={startDrawing}
-      onMouseMove={draw}
-      onMouseUp={finishDrawing}
+      onMouseUp={onCanvasMouseUp}
+      onMouseMove={onCanvasMouseMove}
+      onMouseDown={onCanvasMouseDown}
     />
   );
 };

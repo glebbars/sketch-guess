@@ -1,129 +1,102 @@
-import React, {
+import {
+  ChangeEvent,
   createContext,
   MutableRefObject,
   ReactNode,
+  useCallback,
   useContext,
+  useEffect,
+  useMemo,
   useRef,
-  useState,
 } from "react";
-import { noop } from "../utils/noop";
-import { INITIAL_LINE_WIDTH, INITIAL_STROKE_COLOR } from "../store/constants";
+import { CanvasMouseEvent, CanvasService } from "../services/CanvasService";
+import { CanvasWebsocketService } from "../services/CanvasWebsocketService";
+import { getCoordsFromMouseEvent } from "../utils/canvas";
+import { noopType, noop } from "../utils/noop";
 
 interface CanvasProviderProps {
   children: ReactNode;
+  serverHost: string;
+  serverWsHost: string;
 }
-
-type CanvasMouseEvent = React.MouseEvent<HTMLCanvasElement>;
 
 interface ICanvasProvider {
   canvasRef: null | MutableRefObject<HTMLCanvasElement | null>;
-  contextRef: null | MutableRefObject<CanvasRenderingContext2D | null>;
-
-  prepareCanvas: noop;
-  startDrawing: (event: CanvasMouseEvent) => void;
-  draw: (event: CanvasMouseEvent) => void;
-  finishDrawing: noop;
-  changeColor: (color: string) => void;
-  clearCanvas: noop;
+  onCanvasMouseMove: (event: CanvasMouseEvent) => void;
+  onCanvasMouseDown: (event: CanvasMouseEvent) => void;
+  onCanvasMouseUp: (event: CanvasMouseEvent) => void;
+  onChangeColor: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChangeLineWidth: (event: ChangeEvent<HTMLInputElement>) => void;
+  onClearCanvas: noopType;
 }
 
 const CanvasContext = createContext<ICanvasProvider>({
   canvasRef: null,
-  contextRef: null,
+  onCanvasMouseMove: noop,
+  onCanvasMouseDown: noop,
+  onCanvasMouseUp: noop,
 
-  prepareCanvas: () => {},
-  startDrawing: (_event: CanvasMouseEvent) => {},
-  draw: (_event: CanvasMouseEvent) => {},
-  finishDrawing: () => {},
-  changeColor: (_color: string) => {},
-  clearCanvas: () => {},
+  onChangeColor: noop,
+  onChangeLineWidth: noop,
+  onClearCanvas: noop,
 });
 
-// deprecated
 export const CanvasProvider = (props: CanvasProviderProps) => {
-  const [isDrawing, setIsDrawing] = useState(false); // when changes all children rerender
-
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
-  const prepareCanvas = () => {
-    const canvas = canvasRef.current;
+  const canvasService = useMemo(() => new CanvasService(), []);
+  const canvasWebsocketService = useMemo(
+    () => new CanvasWebsocketService(props.serverWsHost),
+    [props.serverWsHost]
+  );
 
-    if (!canvas) return;
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasService.initCanvas(canvasRef.current);
+    }
+  }, [canvasService, canvasRef]);
 
-    // to support high density screens (e.g. retina)
-    canvas.width = window.innerWidth * 2; //
-    canvas.height = window.innerHeight * 2; //
+  const handleCanvasMouseMove = useCallback(
+    (event: CanvasMouseEvent) => {
+      const { x, y } = getCoordsFromMouseEvent(event);
 
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
+      canvasService?.draw({ x, y });
 
-    const context = canvas.getContext("2d");
+      canvasWebsocketService?.sendDrawingAction({
+        type: "draw",
+        color: canvasService?.color || "",
+        lineWidth: canvasService?.lineWidth || 0,
+        points: [{ x, y }],
+      });
+    },
+    [canvasService, canvasWebsocketService]
+  );
 
-    if (!context) return;
+  const handleMouseDown = (event: CanvasMouseEvent) =>
+    canvasService?.startDrawing(getCoordsFromMouseEvent(event));
 
-    context.scale(2, 2);
-    context.lineCap = "round";
-    context.strokeStyle = INITIAL_STROKE_COLOR;
-    context.lineWidth = INITIAL_LINE_WIDTH;
+  const handleCanvasMouseUp = () => canvasService?.finishDrawing();
 
-    contextRef.current = context;
-  };
+  const handleChangeColor = (event: ChangeEvent<HTMLInputElement>) =>
+    canvasService.setColor(event.target.value);
 
-  const startDrawing = (event: CanvasMouseEvent) => {
-    const {
-      nativeEvent: { offsetX, offsetY },
-    } = event;
+  const handleChangeLineWidth = (event: ChangeEvent<HTMLInputElement>) =>
+    canvasService.setLineWidth(Number(event.target.value));
 
-    if (!contextRef.current) return;
-
-    contextRef.current?.beginPath();
-    contextRef.current?.moveTo(offsetX, offsetY);
-
-    setIsDrawing(true);
-  };
-
-  const finishDrawing = () => {
-    contextRef.current?.closePath();
-    setIsDrawing(false);
-  };
-
-  const draw = (event: CanvasMouseEvent) => {
-    if (!isDrawing) return;
-
-    const {
-      nativeEvent: { offsetX, offsetY },
-    } = event;
-
-    if (!contextRef.current) return;
-
-    contextRef.current?.lineTo(offsetX, offsetY);
-    contextRef.current?.stroke();
-  };
-
-  const clearCanvas = () => {
-    return;
-  };
-
-  const changeColor = (color: string) => {
-    const context = canvasRef.current?.getContext("2d");
-
-    if (!context) return;
-
-    context.strokeStyle = color;
-  };
+  const handleClearCanvas = canvasService.clearCanvas;
 
   return (
     <CanvasContext.Provider
       value={{
         canvasRef,
-        contextRef,
-        prepareCanvas,
-        clearCanvas,
-        draw,
-        startDrawing,
-        finishDrawing,
-        changeColor,
+
+        onCanvasMouseMove: handleCanvasMouseMove,
+        onCanvasMouseDown: handleMouseDown,
+        onCanvasMouseUp: handleCanvasMouseUp,
+
+        onChangeColor: handleChangeColor,
+        onChangeLineWidth: handleChangeLineWidth,
+        onClearCanvas: handleClearCanvas,
       }}
     >
       {props.children}

@@ -1,22 +1,20 @@
-import React, { FC } from "react";
+import { FC } from "react";
 // import styles from "CanvasActions.module.scss";
 import { ColorInput } from "./color-input/ColorInput";
 import { LineWidthInput } from "./line-width-input/LineWidthInput";
 import { ClearCanvasButton } from "./clear-canvas-button/ClearCanvasButton";
-import { useCanvasStore } from "../../providers/CanvasStoreProvider";
+import { useCanvas } from "../../providers/CanvasProvider";
 
 interface CanvasActionsProps {}
 
-export const CanvasActions: FC<CanvasActionsProps> = ({}) => {
-  const {
-    canvasStore: { setColor, setLineWidth, clearCanvas },
-  } = useCanvasStore();
+export const CanvasActions: FC<CanvasActionsProps> = () => {
+  const { onChangeColor, onChangeLineWidth, onClearCanvas } = useCanvas();
 
   return (
     <div>
-      <ColorInput onChange={setColor} />
-      <LineWidthInput onChange={setLineWidth} />
-      <ClearCanvasButton onClick={clearCanvas} />
+      <ColorInput onChange={onChangeColor} />
+      <LineWidthInput onChange={onChangeLineWidth} />
+      <ClearCanvasButton onClick={onClearCanvas} />
     </div>
   );
 };

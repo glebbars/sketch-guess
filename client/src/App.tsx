@@ -1,15 +1,18 @@
-import React from "react";
 import { Canvas } from "./components/canvas/Canvas";
 import "./App.module.scss";
-import { CanvasStoreProvider } from "./providers/CanvasStoreProvider";
+import { CanvasProvider } from "./providers/CanvasProvider";
 import { CanvasActions } from "./components/canvas-actions/CanvasActions";
+import { config } from "./config";
 
 function App() {
   return (
-    <CanvasStoreProvider>
+    <CanvasProvider
+      serverHost={config.REACT_APP_SERVER_HOST}
+      serverWsHost={config.REACT_APP_SERVER_WS_HOST}
+    >
       <Canvas />
       <CanvasActions />
-    </CanvasStoreProvider>
+    </CanvasProvider>
   );
 }
 

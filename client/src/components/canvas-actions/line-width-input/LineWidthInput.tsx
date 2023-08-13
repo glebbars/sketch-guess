@@ -1,9 +1,8 @@
-import React, { FC } from "react";
-// import { useCanvasStore } from "../../../providers/CanvasStoreProvider";
-import { INITIAL_LINE_WIDTH } from "../../../store/constants";
+import { ChangeEvent, FC } from "react";
+import { INITIAL_LINE_WIDTH } from "../../../services/constants";
 
 interface ColorInputProps {
-  onChange: (lineWidth: number) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const LineWidthInput: FC<ColorInputProps> = ({ onChange }) => {
@@ -11,7 +10,7 @@ export const LineWidthInput: FC<ColorInputProps> = ({ onChange }) => {
     <input
       defaultValue={INITIAL_LINE_WIDTH}
       type="number"
-      onChange={(e) => onChange(Number(e.target.value))}
+      onChange={onChange}
     />
   );
 };

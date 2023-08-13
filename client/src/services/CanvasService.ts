@@ -1,31 +1,37 @@
 import React from "react";
-import { INITIAL_LINE_WIDTH, INITIAL_STROKE_COLOR } from "./constants";
 
-type CanvasMouseEvent = React.MouseEvent<HTMLCanvasElement>;
+const INITIAL_STROKE_COLOR = "#000000";
+const INITIAL_LINE_WIDTH = 5;
 
-export interface ICanvasStore {
+export type CanvasMouseEvent = React.MouseEvent<HTMLCanvasElement>;
+export type CanvasCoords = { x: number; y: number };
+
+export interface ICanvasService {
   canvas: HTMLCanvasElement | null;
   context: CanvasRenderingContext2D | null;
   isDrawing: boolean;
 
-  initCanvas(canvasRef: HTMLCanvasElement): void;
+  readonly color: string;
+  readonly lineWidth: number;
+
+  initCanvas(canvas: HTMLCanvasElement): void;
 
   setColor(color: string): void;
   setLineWidth(lineWidth: number): void;
 
-  startDrawing(event: CanvasMouseEvent): void;
-  draw(event: CanvasMouseEvent): void;
+  startDrawing({ x, y }: CanvasCoords): void;
+  draw({ x, y }: CanvasCoords): void;
   finishDrawing(): void;
   clearCanvas(): void;
 }
 
-export class CanvasStore implements ICanvasStore {
-  canvas: ICanvasStore["canvas"] = null;
-  context: ICanvasStore["context"] = null;
-  isDrawing: ICanvasStore["isDrawing"] = false;
+export class CanvasService implements ICanvasService {
+  canvas: ICanvasService["canvas"] = null;
+  context: ICanvasService["context"] = null;
+  isDrawing: ICanvasService["isDrawing"] = false;
 
-  initCanvas = (canvasRef: HTMLCanvasElement) => {
-    this.canvas = canvasRef;
+  initCanvas = (canvas: HTMLCanvasElement) => {
+    this.canvas = canvas;
 
     // to support high density screens (e.g. retina)
     this.canvas.width = window.innerWidth * 2; //
@@ -58,27 +64,19 @@ export class CanvasStore implements ICanvasStore {
     }
   };
 
-  startDrawing = (event: CanvasMouseEvent) => {
-    const {
-      nativeEvent: { offsetX, offsetY },
-    } = event;
-
+  startDrawing = ({ x, y }: CanvasCoords) => {
     if (this.context) {
       this.context.beginPath();
-      this.context.moveTo(offsetX, offsetY);
+      this.context.moveTo(x, y);
       this.isDrawing = true;
     }
   };
 
-  draw = (event: CanvasMouseEvent) => {
+  draw = ({ x, y }: CanvasCoords) => {
     if (!this.isDrawing) return;
 
-    const {
-      nativeEvent: { offsetX, offsetY },
-    } = event;
-
     if (this.context) {
-      this.context.lineTo(offsetX, offsetY);
+      this.context.lineTo(x, y);
       this.context.stroke();
     }
   };
@@ -95,4 +93,12 @@ export class CanvasStore implements ICanvasStore {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
   };
+
+  get color() {
+    return (this.context?.strokeStyle || INITIAL_STROKE_COLOR) as string;
+  }
+
+  get lineWidth() {
+    return this.context?.lineWidth || INITIAL_LINE_WIDTH;
+  }
 }
