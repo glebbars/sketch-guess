@@ -10,7 +10,10 @@ import {
   useRef,
 } from "react";
 import { CanvasMouseEvent, CanvasService } from "../services/CanvasService";
-import { CanvasWebsocketService } from "../services/CanvasWebsocketService";
+import {
+  CanvasWebsocketService,
+  IDrawingAction,
+} from "../services/CanvasWebsocketService";
 import { getCoordsFromMouseEvent } from "../utils/canvas";
 import { noopType, noop } from "../utils/noop";
 
@@ -28,6 +31,8 @@ interface ICanvasProvider {
   onChangeColor: (event: ChangeEvent<HTMLInputElement>) => void;
   onChangeLineWidth: (event: ChangeEvent<HTMLInputElement>) => void;
   onClearCanvas: noopType;
+
+  guestCanvasRef: null | MutableRefObject<HTMLCanvasElement | null>;
 }
 
 const CanvasContext = createContext<ICanvasProvider>({
@@ -39,15 +44,42 @@ const CanvasContext = createContext<ICanvasProvider>({
   onChangeColor: noop,
   onChangeLineWidth: noop,
   onClearCanvas: noop,
+
+  guestCanvasRef: null,
 });
 
 export const CanvasProvider = (props: CanvasProviderProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const guestCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const canvasService = useMemo(() => new CanvasService(), []);
+
+  const handleDrawGuestCanvas = useCallback((action: IDrawingAction) => {
+    const canvas = guestCanvasRef.current;
+
+    if (!canvas) return;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) return;
+
+    const { color, lineWidth, points } = action;
+
+    context.beginPath();
+    context.strokeStyle = color;
+    context.lineWidth = lineWidth;
+    context.moveTo(points[0].x + 100, points[0].y + 100);
+
+    context.lineTo(points[0].x + 100, points[0].y + 100);
+    context.stroke();
+
+    context.closePath();
+    console.log(color, lineWidth, points[0].x, points[0].y);
+  }, []);
+
   const canvasWebsocketService = useMemo(
-    () => new CanvasWebsocketService(props.serverWsHost),
-    [props.serverWsHost]
+    () => new CanvasWebsocketService(props.serverWsHost, handleDrawGuestCanvas),
+    [props.serverWsHost, handleDrawGuestCanvas]
   );
 
   useEffect(() => {
@@ -97,6 +129,8 @@ export const CanvasProvider = (props: CanvasProviderProps) => {
         onChangeColor: handleChangeColor,
         onChangeLineWidth: handleChangeLineWidth,
         onClearCanvas: handleClearCanvas,
+
+        guestCanvasRef,
       }}
     >
       {props.children}

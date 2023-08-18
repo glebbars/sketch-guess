@@ -21,8 +21,8 @@ wss.on("connection", (socket: WebSocket) => {
 
   // Handle WebSocket messages here
   socket.on("message", (message) => {
-    console.log("Received message:", JSON.stringify(message));
-    socket.send(`Hello, you sent -> ${message}`);
+    console.log("Received message:", JSON.parse(message.toString()));
+    socket.send(JSON.stringify(JSON.parse(message.toString()))); // todo ask
     // Handle the message, broadcast to other clients, etc.
   });
 
@@ -32,7 +32,7 @@ wss.on("connection", (socket: WebSocket) => {
     socket.send("closed");
   });
 
-  socket.send("Hi there, I am a WebSocket server");
+  // socket.send("Hi there, I am a WebSocket server");
 });
 
 const PORT = process.env.PORT || 4000;

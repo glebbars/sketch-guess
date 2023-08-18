@@ -3,6 +3,7 @@ import "./App.module.scss";
 import { CanvasProvider } from "./providers/CanvasProvider";
 import { CanvasActions } from "./components/canvas-actions/CanvasActions";
 import { config } from "./config";
+import { GuestView } from "./components/guest-view/GuestView";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
     >
       <Canvas />
       <CanvasActions />
+      <GuestView />
     </CanvasProvider>
   );
 }
