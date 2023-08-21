@@ -1,9 +1,9 @@
 import { FC } from "react";
-import { noopType } from "../../../utils/noop";
+import { CanvasActionsProps } from "../CanvasActions";
 // import styles from "ClearCanvasButton.module.scss";
 
 interface ClearCanvasButtonProps {
-  onClick: noopType;
+  onClick: CanvasActionsProps["onClearCanvas"];
 }
 
 export const ClearCanvasButton: FC<ClearCanvasButtonProps> = ({ onClick }) => {

@@ -15,15 +15,29 @@ const server = http.createServer(app); // Create an HTTP server
 
 const wss = new WebSocket.Server({ server }); // Create a WebSocket server on the same HTTP server
 
+wss.on("connection", (ws) => {
+  ws.on("error", console.error);
+
+  ws.on("message", (data, isBinary) => {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data, { binary: isBinary });
+      }
+    });
+  });
+});
+
 // WebSocket connection handler
 wss.on("connection", (socket: WebSocket) => {
   console.log("WebSocket connection established");
 
-  // Handle WebSocket messages here
+  // Handle the message, broadcast to other clients, etc.
   socket.on("message", (message) => {
-    console.log("Received message:", JSON.parse(message.toString()));
-    socket.send(JSON.stringify(JSON.parse(message.toString()))); // todo ask
-    // Handle the message, broadcast to other clients, etc.
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(JSON.parse(message.toString()))); // todo ask
+      }
+    });
   });
 
   // Handle WebSocket disconnection

@@ -1,4 +1,4 @@
-import { CanvasMouseEvent } from "../services/CanvasService";
+import { CanvasMouseEvent } from "../components/canvas/Canvas";
 
 export const getCoordsFromMouseEvent = (event: CanvasMouseEvent) => {
   const {

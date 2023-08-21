@@ -1,20 +1,28 @@
-import { CanvasCoords } from "./CanvasService";
+import { CanvasCoords } from "./canvas/CanvasService";
+import { noop } from "../utils/noop";
 
-export interface IDrawingAction {
-  type: "start" | "draw" | "finish";
+export interface ICanvasAction {
+  type: "draw" | "clear";
+}
+
+export interface ICanvasClearAction extends ICanvasAction {
+  type: "clear";
+}
+
+export interface ICanvasDrawAction extends ICanvasAction {
+  type: "draw";
   color: string;
   lineWidth: number;
-  points: CanvasCoords[];
+  coords: CanvasCoords;
 }
 
 export class CanvasWebsocketService {
   private socket: WebSocket;
-  private readonly receiveDrawingActionCb: (action: IDrawingAction) => void;
+  receiveCanvasActionCb: (
+    action: ICanvasDrawAction | ICanvasClearAction
+  ) => void = noop; // todo solve optional
 
-  constructor(
-    socketUrl: string,
-    receiveDrawingActionCb: (action: IDrawingAction) => void
-  ) {
+  constructor(socketUrl: string) {
     this.socket = new WebSocket(socketUrl);
     this.socket.addEventListener("open", () => {
       console.log("WebSocket connection established.");
@@ -23,8 +31,9 @@ export class CanvasWebsocketService {
     this.socket.addEventListener("message", (event) => {
       try {
         const parsedMessage = JSON.parse(event.data.toString());
+        console.log("receive message", parsedMessage);
 
-        this.receiveDrawingAction(parsedMessage);
+        this.receiveCanvasActionCb(parsedMessage);
       } catch (err) {
         console.log("failed to parse JSON received from WS");
       }
@@ -33,15 +42,15 @@ export class CanvasWebsocketService {
     this.socket.addEventListener("close", () => {
       console.log("WebSocket connection closed.");
     });
-
-    this.receiveDrawingActionCb = receiveDrawingActionCb;
   }
 
-  sendDrawingAction(action: IDrawingAction) {
+  sendCanvasAction = (action: ICanvasDrawAction | ICanvasClearAction) => {
     this.socket.send(JSON.stringify(action));
-  }
+  };
 
-  receiveDrawingAction(action: IDrawingAction) {
-    this.receiveDrawingActionCb(action);
-  }
+  receiveCanvasAction = (
+    receiveCanvasActionCb: CanvasWebsocketService["receiveCanvasActionCb"]
+  ) => {
+    this.receiveCanvasActionCb = receiveCanvasActionCb;
+  };
 }

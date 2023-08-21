@@ -1,9 +1,9 @@
-import React from "react";
+import { INITIAL_LINE_WIDTH, INITIAL_STROKE_COLOR } from "./constants";
+import {
+  ICanvasClearAction,
+  ICanvasDrawAction,
+} from "../CanvasWebsocketService";
 
-const INITIAL_STROKE_COLOR = "#000000";
-const INITIAL_LINE_WIDTH = 5;
-
-export type CanvasMouseEvent = React.MouseEvent<HTMLCanvasElement>;
 export type CanvasCoords = { x: number; y: number };
 
 export interface ICanvasService {
@@ -20,9 +20,12 @@ export interface ICanvasService {
   setLineWidth(lineWidth: number): void;
 
   startDrawing({ x, y }: CanvasCoords): void;
-  draw({ x, y }: CanvasCoords): void;
+  draw(
+    { x, y }: CanvasCoords,
+    sendDrawingCb: (action: ICanvasDrawAction) => void
+  ): void;
   finishDrawing(): void;
-  clearCanvas(): void;
+  clearCanvas(sendClearCb?: (action: ICanvasClearAction) => void): void; // todo optional not best practice
 }
 
 export class CanvasService implements ICanvasService {
@@ -33,9 +36,8 @@ export class CanvasService implements ICanvasService {
   initCanvas = (canvas: HTMLCanvasElement) => {
     this.canvas = canvas;
 
-    // to support high density screens (e.g. retina)
-    this.canvas.width = window.innerWidth * 2; //
-    this.canvas.height = window.innerHeight * 2; //
+    this.canvas.width = window.innerWidth; //
+    this.canvas.height = window.innerHeight; //
 
     this.canvas.style.width = `${window.innerWidth}px`;
     this.canvas.style.height = `${window.innerHeight}px`;
@@ -44,7 +46,7 @@ export class CanvasService implements ICanvasService {
 
     if (!context) return;
 
-    context.scale(2, 2);
+    // context.scale(2, 2);
     context.lineCap = "round";
     this.setColor(INITIAL_STROKE_COLOR);
     this.setLineWidth(INITIAL_LINE_WIDTH);
@@ -52,19 +54,19 @@ export class CanvasService implements ICanvasService {
     this.context = context;
   };
 
-  setColor = (color: string) => {
+  setColor: ICanvasService["setColor"] = (color) => {
     if (this.context) {
       this.context.strokeStyle = color;
     }
   };
 
-  setLineWidth = (lineWidth: number) => {
+  setLineWidth: ICanvasService["setLineWidth"] = (lineWidth) => {
     if (this.context) {
       this.context.lineWidth = lineWidth;
     }
   };
 
-  startDrawing = ({ x, y }: CanvasCoords) => {
+  startDrawing: ICanvasService["startDrawing"] = ({ x, y }) => {
     if (this.context) {
       this.context.beginPath();
       this.context.moveTo(x, y);
@@ -72,33 +74,40 @@ export class CanvasService implements ICanvasService {
     }
   };
 
-  draw = ({ x, y }: CanvasCoords) => {
-    if (!this.isDrawing) return;
-
-    if (this.context) {
+  draw: ICanvasService["draw"] = ({ x, y }, sendDrawCb) => {
+    if (this.isDrawing && this.context) {
       this.context.lineTo(x, y);
       this.context.stroke();
+
+      sendDrawCb({
+        type: "draw",
+        color: this.color,
+        lineWidth: this.lineWidth,
+        coords: { x, y },
+      });
     }
   };
 
-  finishDrawing = () => {
+  finishDrawing: ICanvasService["finishDrawing"] = () => {
     if (this.context) {
       this.context.closePath();
       this.isDrawing = false;
     }
   };
 
-  clearCanvas = () => {
+  clearCanvas: ICanvasService["clearCanvas"] = (sendClearCb) => {
     if (this.context && this.canvas) {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      sendClearCb?.({ type: "clear" });
     }
   };
 
-  get color() {
+  get color(): ICanvasService["color"] {
     return (this.context?.strokeStyle || INITIAL_STROKE_COLOR) as string;
   }
 
-  get lineWidth() {
+  get lineWidth(): ICanvasService["lineWidth"] {
     return this.context?.lineWidth || INITIAL_LINE_WIDTH;
   }
 }

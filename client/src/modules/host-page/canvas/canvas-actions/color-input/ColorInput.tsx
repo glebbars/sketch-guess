@@ -1,8 +1,9 @@
-import { ChangeEvent, FC } from "react";
-import { INITIAL_STROKE_COLOR } from "../../../services/constants";
+import { FC } from "react";
+import { INITIAL_STROKE_COLOR } from "../../../../../services/canvas/constants";
+import { CanvasActionsProps } from "../CanvasActions";
 
 interface ColorInputProps {
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChange: CanvasActionsProps["onChangeColor"];
 }
 
 export const ColorInput: FC<ColorInputProps> = ({ onChange }) => {

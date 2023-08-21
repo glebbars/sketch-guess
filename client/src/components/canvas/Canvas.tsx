@@ -1,20 +1,25 @@
-import { FC } from "react";
+import React, { FC, ForwardedRef, forwardRef } from "react";
 import styles from "./Canvas.module.scss";
-import { useCanvas } from "../../providers/CanvasProvider";
 
-interface CanvasProps {}
+export type CanvasMouseEvent = React.MouseEvent<HTMLCanvasElement>;
 
-export const Canvas: FC<CanvasProps> = () => {
-  const { canvasRef, onCanvasMouseUp, onCanvasMouseMove, onCanvasMouseDown } =
-    useCanvas();
+interface CanvasProps {
+  ref: ForwardedRef<HTMLCanvasElement>;
+  onMouseUp?: (event: CanvasMouseEvent) => void;
+  onMouseMove?: (event: CanvasMouseEvent) => void;
+  onMouseDown?: (event: CanvasMouseEvent) => void;
+}
 
-  return (
-    <canvas
-      className={styles.root}
-      ref={canvasRef}
-      onMouseUp={onCanvasMouseUp}
-      onMouseMove={onCanvasMouseMove}
-      onMouseDown={onCanvasMouseDown}
-    />
-  );
-};
+export const Canvas: FC<CanvasProps> = forwardRef(
+  ({ onMouseUp, onMouseMove, onMouseDown }, ref) => {
+    return (
+      <canvas
+        ref={ref}
+        className={styles.root}
+        onMouseUp={onMouseUp}
+        onMouseMove={onMouseMove}
+        onMouseDown={onMouseDown}
+      />
+    );
+  }
+);
